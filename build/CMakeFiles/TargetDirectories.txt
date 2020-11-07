@@ -1,0 +1,3 @@
+/home/steven/code/tst/视频流(视频检测圆_变化腐蚀膨胀参数会卡死)/build/CMakeFiles/rebuild_cache.dir
+/home/steven/code/tst/视频流(视频检测圆_变化腐蚀膨胀参数会卡死)/build/CMakeFiles/Test.dir
+/home/steven/code/tst/视频流(视频检测圆_变化腐蚀膨胀参数会卡死)/build/CMakeFiles/edit_cache.dir
