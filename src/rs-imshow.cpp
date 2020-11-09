@@ -1,58 +1,95 @@
-
-#include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
-#include <opencv2/opencv.hpp>   // Include OpenCV API
-#include <iostream>
-#include <stdio.h>
-#include <pcl/io/io.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/point_types.h>
-#include <string>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <pcl/visualization/cloud_viewer.h>//调用过程更加简单直接
-#include <pcl/visualization/pcl_visualizer.h>//visuailization methord 最强大的是PCLvisualizer
-#include <pcl/visualization/range_image_visualizer.h> //深度图可视化
-#include <pcl/console/parse.h> //命令行参数解析
-#include <boost/thread/thread.hpp>
-#include <pcl/common/common_headers.h>
-#include <pcl/features/normal_3d.h>
-using namespace std;
+#include <librealsense2/rs.hpp>
+#include<opencv2/core.hpp>
+#include<opencv2/highgui.hpp>
+#include<opencv2/imgproc.hpp>
 using namespace cv;
-
-
-int erosion_elem = 0;
-int erosion_size = 0;
-int minDist_hough = 70;
-int param1 = 50;
-int param2 = 50;
-int minRadius = 3;
-int maxRadius = 30;
-int const max_elem = 50;
-int const max_kernel_size = 50;
-
-  Mat src;    
-  Mat erosion_dst;
-  Mat element;
-  Mat element_dilate;
-/* createTrackbar( "Element:\n 0: Rect \n 1: Cross \n 2: Ellipse", "Erosion Demo",
-          &erosion_elem, max_elem,
-          Erosion );
-
-createTrackbar( "Kernel size:\n 2n +1", "Erosion Demo",
-          &erosion_size, max_kernel_size,
-          Erosion ); */
-
-void Erosion( int, void* );
-
-
-/* 
- */
-
-
-int main()
+#include<iostream>
+#include<string>
+using namespace std;
+//输入图像
+Mat img;
+//灰度值归一化
+Mat bgr;
+//HSV图像
+Mat hsv;
+//色相
+int hmin = 0;
+int hmin_Max = 360;
+int hmax = 360;
+int hmax_Max = 360;
+//饱和度
+int smin = 0;
+int smin_Max = 255;
+int smax = 255;
+int smax_Max = 255;
+//亮度
+int vmin = 0;
+int vmin_Max = 255;
+int vmax = 255;
+int vmax_Max = 255;
+//显示原图的窗口
+string windowName = "src";
+//输出图像的显示窗口
+string dstName = "dst";
+//输出图像
+Mat dst;
+//回调函数
+void callBack(int, void*)
 {
-    int cntError = 0;
-    //构建一个抽象设备的管道
+    //输出图像分配内存
+    dst = Mat::zeros(img.size(), CV_32FC3);
+    //掩码
+    Mat mask;
+    inRange(hsv, Scalar(hmin, smin / float(smin_Max), vmin / float(vmin_Max)), Scalar(hmax, smax / float(smax_Max), vmax / float(vmax_Max)), mask);
+    //只保留
+    for (int r = 0; r < bgr.rows; r++)
+    {
+        for (int c = 0; c < bgr.cols; c++)
+        {
+            if (mask.at<uchar>(r, c) == 255)
+            {
+                dst.at<Vec3f>(r, c) = bgr.at<Vec3f>(r, c);
+            }
+        }
+    }
+
+    vector<Vec3f> circles;
+    Mat dst_s;
+
+    cvtColor(dst,dst,COLOR_BGR2GRAY);
+    normalize(dst,dst,1.0,0.0,NORM_MINMAX);//归一到0~1之间 
+    dst.convertTo(dst_s, CV_8UC1, 255, 0); //转换为0~255之间的整数 
+
+    HoughCircles(dst_s, circles, HOUGH_GRADIENT, 1.5, 70, 100, 70, 0, 100);
+
+    //【5】依次在图中绘制出圆
+    for (size_t i = 0; i < circles.size(); i++)
+    {
+        //参数定义
+        Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+        int radius = cvRound(circles[i][2]);
+        //绘制圆心
+        //circle(RGBImg, center, 3, Scalar(0, 255, 0), -1, 8, 0);
+        //绘制圆轮廓
+        circle(dst_s, center, radius, Scalar(155, 50, 255), 3, 8, 0);
+
+
+        //绘制圆心
+        circle(dst_s, center, 3, Scalar(0, 255, 0), -1, 8, 0);
+    }
+        //输出图像
+    imshow(dstName, dst_s);
+}
+int main(int argc, char*argv[])
+{
+    //输入图像
+    //img = imread("1.jpg", IMREAD_COLOR);
+    // img = imread("3.png", IMREAD_COLOR);
+    // if (!img.data || img.channels() != 3)
+    //  return -1;
+
+
+    /* //构建一个抽象设备的管道
     rs2::pipeline pipe;
     //使用非默认配置文件创建配置以配置管道
     rs2::config cfg;
@@ -60,97 +97,40 @@ int main()
     cfg.enable_stream(RS2_STREAM_COLOR, 640, 480, RS2_FORMAT_BGR8, 30);
     //指示管道使用请求的配置开始流式传输
     pipe.start(cfg);
-    while(1)//!viewer->wasStopped()
-    {
-        cout << "is0\n" << endl;
 
-        int Start=getTickCount()*1000/getTickFrequency();
-        // 放下几个第一帧以使自动曝光稳定
-        rs2::frameset frames;
-        
-        frames = pipe.wait_for_frames();
-        
-        //获取每个帧
-        rs2::frame color_frame = frames.get_color_frame();
-        //从彩色图像创建OpenCV矩阵
-        Mat color(Size(640, 480), CV_8UC3, (void*)color_frame.get_data(), Mat::AUTO_STEP); 
-        Mat HSVImage;
-        src = color.clone(); 
-        cvtColor(color, HSVImage,cv::COLOR_BGR2HSV);
-        cvtColor(src, src,cv::COLOR_BGR2GRAY);
-        
-        namedWindow("Display Image", WINDOW_AUTOSIZE );
-        namedWindow("Erosion Demo", WINDOW_AUTOSIZE );
-        //namedWindow("raw", WINDOW_AUTOSIZE );
-        createTrackbar( "Element:\n 0: Rect \n 1: Cross \n 2: Ellipse", "Erosion Demo",
-          &erosion_elem, max_elem, Erosion );
+    // 放下几个第一帧以使自动曝光稳定
+    rs2::frameset frames;
+    for(int i = 0; i < 30; i++)        
+    //等待所有配置的流生成一个帧
+    frames = pipe.wait_for_frames(15000);
 
-        createTrackbar( "Kernel size:\n 2n +1", "Erosion Demo",
-          &erosion_size, max_kernel_size, Erosion );  
-       // cv::createTrackbar("阈值：","边缘检测",&thresholds,100,canny_track);
-         erode( src, erosion_dst, element );
-         cout << "is3\n" << endl;
-         dilate(erosion_dst, erosion_dst, element_dilate);
-         cout << "is4\n" << endl;
+    //获取每个帧
+    rs2::frame color_frame = frames.get_color_frame();
+    //从彩色图像创建OpenCV矩阵
+    */
+    Mat RGBImg(Size(640, 480), CV_8UC3, (void*)color_frame.get_data(), Mat::AUTO_STEP);    
+ 
+    //图片
+    RGBImg = imread("/home/steven/Pictures/Balls/60cm_Color.png");
+    imshow(windowName, RGBImg);
 
-
-        
-
-        //imshow("Display Image", HSVImage);
-
-
-        vector<Vec3f> circles;
-        HoughCircles(erosion_dst, circles, HOUGH_GRADIENT, 1.5, 50, 100, 50, 0, 40);
-        //依次在图中绘制出圆
-        cout << "is1\n" << endl;
-        for (size_t i = 0; i < circles.size(); i++)
-        {
-            //参数定义
-            Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-            int radius = cvRound(circles[i][2]);
-            //绘制圆心
-            //circle(RGBImg, center, 3, Scalar(0, 255, 0), -1, 8, 0);
-            //绘制圆轮廓
-            circle(src, center, radius, Scalar(155, 50, 255), 3, 8, 0);
-
-           /*  int watchR1, watchR2, watchR3;
-            watchR1 = src.at<Vec3b>(center)[0];
-            watchR2 = src.at<Vec3b>(center)[1];
-            watchR3 = src.at<Vec3b>(center)[2]; */
-            //cout << i+1 << ' ' <<watchR1 << ' ' << watchR2 << ' ' << watchR3 << endl;
-            cout<< "is2\n"<< endl;
-            //绘制圆心
-            circle(src, center, 3, Scalar(0, 255, 0), -1, 8, 0);
-        }
-        cout << "is5\n" << endl;
-        imshow("HSV图像", HSVImage);
-        imshow("预处理", erosion_dst );
-        imshow("原图", src);
-        //镇速率
-        int Stop=getTickCount()*1000/getTickFrequency();
-        cout << "FrameSpeed:\t" << Stop - Start << endl;
-        Erosion(0,0);//问题在这儿
-        waitKey(100);
-        cout << "is6\n" << endl;
-    }
-
+    img = RGBImg.clone();
+    //彩色图像的灰度值归一化
+    img.convertTo(bgr, CV_32FC3, 1.0 / 255, 0);
+    //颜色空间转换
+    cvtColor(bgr, hsv, COLOR_BGR2HSV);
+    //定义输出图像的显示窗口
+    namedWindow(dstName, WINDOW_GUI_EXPANDED);
+    //调节色相 H
+    createTrackbar("hmin", dstName, &hmin, hmin_Max, callBack);
+    createTrackbar("hmax", dstName, &hmax, hmax_Max, callBack);
+    //调节饱和度 S
+    createTrackbar("smin", dstName, &smin, smin_Max, callBack);
+    createTrackbar("smax", dstName, &smax, smax_Max, callBack);
+    //调节亮度 V
+    createTrackbar("vmin", dstName, &vmin, vmin_Max, callBack);
+    createTrackbar("vmax", dstName, &vmax, vmax_Max, callBack);
+    callBack(0, 0);
+    waitKey(0);
     return 0;
 }
-
-void Erosion( int, void* )
-{
-    int erosion_type = 0;
-    /* if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
-    else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
-    else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; } */
-    erosion_type = MORPH_ELLIPSE;
-
-    element = getStructuringElement( erosion_type,
-                        Size( 2*erosion_size + 1, 2*erosion_size+1 ),
-                        Point( erosion_size, erosion_size ) );
-    element_dilate = getStructuringElement(MORPH_ELLIPSE, Size(erosion_elem, erosion_elem));
-
-    /// Apply the erosion operation
-    /*  erode( src, erosion_dst, element ); */
-}
-
