@@ -60,15 +60,15 @@ include CMakeFiles/Test.dir/flags.make
 CMakeFiles/Test.dir/src/rs-imshow.cpp.o: CMakeFiles/Test.dir/flags.make
 CMakeFiles/Test.dir/src/rs-imshow.cpp.o: ../src/rs-imshow.cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/home/steven/code/tst/视频流(视频检测圆_变化腐蚀膨胀参数会卡死)/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/Test.dir/src/rs-imshow.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/Test.dir/src/rs-imshow.cpp.o -c "/home/steven/code/tst/视频流(视频检测圆_变化腐蚀膨胀参数会卡死)/src/rs-imshow.cpp"
+	/usr/bin/x86_64-linux-gnu-g++-7  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/Test.dir/src/rs-imshow.cpp.o -c "/home/steven/code/tst/视频流(视频检测圆_变化腐蚀膨胀参数会卡死)/src/rs-imshow.cpp"
 
 CMakeFiles/Test.dir/src/rs-imshow.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Test.dir/src/rs-imshow.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/steven/code/tst/视频流(视频检测圆_变化腐蚀膨胀参数会卡死)/src/rs-imshow.cpp" > CMakeFiles/Test.dir/src/rs-imshow.cpp.i
+	/usr/bin/x86_64-linux-gnu-g++-7 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/steven/code/tst/视频流(视频检测圆_变化腐蚀膨胀参数会卡死)/src/rs-imshow.cpp" > CMakeFiles/Test.dir/src/rs-imshow.cpp.i
 
 CMakeFiles/Test.dir/src/rs-imshow.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Test.dir/src/rs-imshow.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/steven/code/tst/视频流(视频检测圆_变化腐蚀膨胀参数会卡死)/src/rs-imshow.cpp" -o CMakeFiles/Test.dir/src/rs-imshow.cpp.s
+	/usr/bin/x86_64-linux-gnu-g++-7 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/steven/code/tst/视频流(视频检测圆_变化腐蚀膨胀参数会卡死)/src/rs-imshow.cpp" -o CMakeFiles/Test.dir/src/rs-imshow.cpp.s
 
 CMakeFiles/Test.dir/src/rs-imshow.cpp.o.requires:
 
